@@ -1,0 +1,109 @@
+- name: VidyakinGazarovaVirt5
+  hosts: all
+  become: true
+
+  vars:
+    version: "3:4.8.27-1"
+    server_name: "example.com"
+    root_path: "/var/www/html"
+    repos:
+      - repo: "https://github.com/rat9615/simple-nodejs-app"
+        dest: "/tmp/app1"
+      - repo: "https://github.com/rat9615/simple-nodejs-app"
+        dest: "/tmp/app2"
+      - repo: "https://github.com/rat9615/simple-nodejs-app"
+        dest: "/tmp/app3"
+        
+  tasks:
+    - name: first
+      ansible.builtin.shell: 'echo "$(date) : $(whoami)" >> /home/VidyakinGazarova/VidyakinGazarovaTask1.txt'
+      args:
+        executable: /bin/bash
+
+    - name: second
+      ansible.builtin.apt:
+        name: mc={{ version }}
+        state: present
+        update_cache: yes
+
+    - name: third
+      block:
+        - name: third_1
+          ansible.builtin.apt_key:
+            url: https://nginx.org/keys/nginx_signing.key
+            state: present
+
+        - name: third_2
+          ansible.builtin.apt_repository:
+            repo: "deb http://nginx.org/packages/ubuntu {{ ansible_distribution_release }} nginx"
+            state: present
+            filename: nginx
+
+        - name: third_3
+          ansible.builtin.apt:
+            name: nginx
+            state: present
+            update_cache: yes
+
+    - name: fourth
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#Port'
+        insertafter: '^Port'
+        line: Port 5555
+            
+    - name: fifth
+      block:
+        - name: fifth_1
+          ansible.builtin.file:
+            path: /tmp/configs
+            state: directory
+        - name: fifth_2
+          ansible.builtin.template:
+            src: templates/nginx.conf.j2
+            dest: /tmp/configs/nginx.conf
+            backup: yes
+            
+
+    - name: sixth
+      ansible.builtin.get_url:
+        url: "https://avatars.githubusercontent.com/u/70257211?v=4"
+        dest: "/tmp/avatar.jpg"
+        mode: '0777'
+        force: no
+      register: download_result
+      until: download_result.failed == false
+      retries: 3
+      delay: 10
+
+    - name: seventh
+      ansible.builtin.cron:
+        name: "hello"
+        minute: "1"
+        job: "echo Hello"
+
+    - name: eigth
+      block:
+        - name: eight_1
+          ansible.builtin.apt:
+            name: npm
+            state: present
+            update_cache: yes
+        - name: eight_2
+          ansible.builtin.git:
+            repo: "{{ item.repo }}"
+            dest: "{{ item.dest }}"
+            clone: yes
+            update: yes
+            force: yes
+          loop: "{{ repos }}"
+        - name: eight_3
+          ansible.builtin.command: npm install
+          args:
+            chdir: "{{ item.dest }}"
+          loop: "{{ repos }}"
+
+    - name: ninth
+      ansible.builtin.systemd_service:
+        name: dbus
+        state: reloaded
