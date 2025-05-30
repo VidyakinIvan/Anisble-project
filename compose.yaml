@@ -1,0 +1,10 @@
+services:
+  ansible:
+    image: ghcr.io/akmalovaa/ansible-sandbox:latest
+    # build:
+    #   dockerfile: Dockerfile
+    environment:
+      ANSIBLE_CONFIG: "./ansible/ansible.cfg"
+    command: 'tail -f /dev/null'
+    volumes:
+      - .:/srv
